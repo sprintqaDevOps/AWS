@@ -15,3 +15,7 @@ print("Bigger than 90: ", len(numGreater90))
 print("Avarege: ", sum(userInputs)/len(userInputs))
 
 print("hello from a git session in vs code")
+
+print("adding line after git checkout -b ")
+
+
