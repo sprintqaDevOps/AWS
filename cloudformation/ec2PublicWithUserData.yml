@@ -1,0 +1,68 @@
+Description:  Automation of 2 EC2 creations in us-east-1
+Parameters:
+  amiId:
+    Description: AMI for the 1st instance(default is latest AmaLinux2)
+    Type: 'AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>'
+    Default: '/aws/service/ami-amazon-linux-latest/amzn2-ami-hvm-x86_64-gp2'
+  Key:
+    Type: 'AWS::EC2::KeyPair::KeyName'
+    Description: "SSH keypair name"
+  subnet1:
+    Type: 'AWS::EC2::Subnet::Id'
+    Description: "Subnet ID for the 1st EC2"
+  vpcID:
+    Type: 'AWS::EC2::VPC::Id'
+    Description: "Default VPC ID"
+
+Resources:
+  Instance1:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref Key
+      InstanceType: "t2.micro"
+      ImageId: !Ref amiId
+      SubnetId: !Ref subnet1
+      SecurityGroupIds: 
+        - !Ref CustomSG
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
+            touch /var/www/html/index.html
+            echo "hello world from server 2" >> /var/www/html/index.html 
+      Tags:
+        - Key: Name
+          Value: Server2
+        - Key: TechnicalTeam
+          Value: DevOps
+        - Key: BusinessTeam
+          Value: Appraisal
+  CustomSG: 
+    Type: 'AWS::EC2::SecurityGroup'
+    Properties:
+      VpcId: !Ref vpcID
+      GroupDescription: SSH access for IPv4 and IPv6 
+      SecurityGroupIngress:
+        - Description: 'Inbound IPv4 SSH traffic'
+          IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: '0.0.0.0/0'
+        - Description: 'Inbound IPv6 SSH traffic'
+          IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIpv6: ::/0
+        - Description: 'Inbound IPv4 HTTP traffic'
+          IpProtocol: tcp
+          FromPort: '80'
+          ToPort: '80'
+          CidrIp: '0.0.0.0/0'
+        - Description: 'Inbound IPv4 SSH traffic'
+          IpProtocol: tcp
+          FromPort: '443'
+          ToPort: '443'
+          CidrIp: '0.0.0.0/0'
