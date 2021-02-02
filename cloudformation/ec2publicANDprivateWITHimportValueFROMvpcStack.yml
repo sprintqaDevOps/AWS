@@ -15,7 +15,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref amiId
-      SubnetId: !ImportValue publicSubnet1
+      SubnetId: !ImportValue PublicSubnet1
       SecurityGroupIds: 
         - !Ref PublicInstanceSG
       Tags:
@@ -27,7 +27,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref amiId
-      SubnetId: !ImportValue privateEC2Subnet1
+      SubnetId: !ImportValue PrivateSubnet1
       SecurityGroupIds: 
         - !Ref PrivateInstanceSG
       Tags:
