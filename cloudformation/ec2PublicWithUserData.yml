@@ -59,8 +59,9 @@ Resources:
             yum install -y httpd
             systemctl start httpd
             systemctl enable httpd
-            touch /var/www/html/index.html
-            echo "hello world from server 2" >> /var/www/html/index.html 
+            mkdir /var/www/html/hello
+            touch /var/www/html/hello/index.html
+            echo "hello world from server 2" >> /var/www/html/hello/index.html 
       Tags:
         - Key: Name
           Value: Server2
