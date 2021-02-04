@@ -74,7 +74,7 @@ Resources:
       VpcId: !Ref vpcID
       GroupDescription: SSH access for IPv4 and IPv6 
       SecurityGroupIngress:
-        - Description: 'Inbound IPv4 SSH traffic'
+        - Description: 'Inbound IPv4 SSH traffic.'
           IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'
