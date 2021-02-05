@@ -10,6 +10,9 @@ Parameters:
   subnet1:
     Type: 'AWS::EC2::Subnet::Id'
     Description: "Subnet ID for the 1st EC2"
+  subnet2:
+    Type: 'AWS::EC2::Subnet::Id'
+    Description: "Subnet ID for the 2nd EC2"
   vpcID:
     Type: 'AWS::EC2::VPC::Id'
     Description: "Default VPC ID"
@@ -32,7 +35,33 @@ Resources:
             systemctl start httpd
             systemctl enable httpd
             touch /var/www/html/index.html
-            echo "hello world from server 2" >> /var/www/html/index.html 
+            echo "hello world from server 1" >> /var/www/html/index.html 
+      Tags:
+        - Key: Name
+          Value: Server1
+        - Key: TechnicalTeam
+          Value: DevOps
+        - Key: BusinessTeam
+          Value: Appraisal
+  Instance2:
+    Type: AWS::EC2::Instance
+    Properties:
+      KeyName: !Ref Key
+      InstanceType: "t2.micro"
+      ImageId: !Ref amiId
+      SubnetId: !Ref subnet2
+      SecurityGroupIds: 
+        - !Ref CustomSG
+      UserData:
+        Fn::Base64:
+          !Sub |
+            #!/bin/bash -xe
+            yum install -y httpd
+            systemctl start httpd
+            systemctl enable httpd
+            mkdir /var/www/html/hello
+            touch /var/www/html/hello/index.html
+            echo "hello world from server 2" >> /var/www/html/hello/index.html 
       Tags:
         - Key: Name
           Value: Server2
@@ -46,7 +75,7 @@ Resources:
       VpcId: !Ref vpcID
       GroupDescription: SSH access for IPv4 and IPv6 
       SecurityGroupIngress:
-        - Description: 'Inbound IPv4 SSH traffic'
+        - Description: 'Inbound IPv4 SSH traffic.'
           IpProtocol: tcp
           FromPort: '22'
           ToPort: '22'

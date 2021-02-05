@@ -15,7 +15,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref amiId
-      SubnetId: !ImportValue publicSubnet1
+      SubnetId: !ImportValue PublicSubnet1
       SecurityGroupIds: 
         - !Ref PublicInstanceSG
       Tags:
@@ -27,7 +27,7 @@ Resources:
       KeyName: !Ref KeyName
       InstanceType: "t2.micro"
       ImageId: !Ref amiId
-      SubnetId: !ImportValue privateEC2Subnet1
+      SubnetId: !ImportValue PrivateSubnet1
       SecurityGroupIds: 
         - !Ref PrivateInstanceSG
       Tags:
@@ -44,6 +44,12 @@ Resources:
           FromPort: '22'
           ToPort: '22'
           CidrIp: '0.0.0.0/0'
+        - Description: 'Inbound RDP traffic'
+          IpProtocol: tcp
+          FromPort: '3389'
+          ToPort: '3389'
+          CidrIp: '0.0.0.0/0'
+        
   PrivateInstanceSG:
     Type: 'AWS::EC2::SecurityGroup'
     Properties:
