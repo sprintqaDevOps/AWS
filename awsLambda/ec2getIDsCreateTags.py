@@ -1,37 +1,53 @@
 import boto3, json
 
 session = boto3.Session(profile_name='development')
+#global variables for region_name
 east = 'us-east-1'
 west = 'us-west-2'
+
+# declaring ec2East variable to use ec2 session.client
 ec2East = session.client('ec2', region_name = east)
+ec2West = session.client('ec2', region_name = west)
 
-def getEC2IDs():
-    response = ec2East.describe_instances()
-    a=response['Reservations']
+def helloWorld():
     ec2IDs = []
+    ec2AMIs = []
+    hello = ec2East.describe_instances()
+    a = hello['Reservations']
+
     for i in a:
-        b=i['Instances']
-        for j in b:
-            #print(j['InstanceId'])
+        #print(i['Instances'])
+        for j in i['Instances']:
+            # print(j['ImageId'])
+            # print(j['InstanceId'])
             ec2IDs.append(j['InstanceId'])
-    #print('List of EC2 IDs: ',ec2IDs)
-    return ec2IDs
+            ec2AMIs.append(j['ImageId'])
 
-def main():
-    listOfEC2s=getEC2IDs()
-    print(listOfEC2s)
+    print('existing instance ids:',ec2IDs)
+    print('existing ami ids:', ec2AMIs)
+    return (ec2IDs,ec2AMIs)
+
+def updateTags(listOfEC2s):
     for i in listOfEC2s:
-        ec2East.create_tags(
-            Resources = [
-                i
+        response = ec2East.create_tags(
+            Resources=[
+                i,
             ],
-            Tags = [
+            Tags=[
                 {
-                    'Key' : 'Day',
-                    'Value' : 'Saturday'
-
-                }
-            ]
+                    'Key': 'Day',
+                    'Value': 'Sunday',
+                },
+                {
+                    'Key': 'TechnicalTeam',
+                    'Value': 'DevOps',
+                },
+            ],
         )
 
+def main():
+    listOfEC2s,listOfAMIs = helloWorld()
+    updateTags(listOfEC2s)
+
 main()
+
