@@ -1,0 +1,133 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: S3 Bucket for CrossAccount access
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+  ObjectExpiration:
+    Type: Number
+    Description: S3 object lifecycle 
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterLabels:
+      BucketName:
+        default: S3 Bucket Name
+      ObjectExpiration:
+        default: S3 Object Expiration Date
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    #DeletionPolicy : Retain
+    DependsOn:
+      - SNSTopicPolicy
+    Properties:
+      # BucketName dependent on AWS::SNS::TopicPolicy
+      BucketName: !Ref BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          -
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 2
+            ExpirationInDays: !Ref ObjectExpiration
+            Status: Enabled
+      NotificationConfiguration:
+        TopicConfigurations:
+          -
+            Event: s3:ObjectCreated:Put
+            Topic: !Ref SNSTopic
+          -
+            Event: s3:ObjectCreated:Post
+            Topic: !Ref SNSTopic
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      Tags:
+        -
+          Key: Description
+          Value: S3Bucket for StaticWebsite
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref SNSTopic
+      PolicyDocument:
+        Id: SNSTopicPolicy
+        Version: '2012-10-17'
+        Statement:
+          -
+            Sid: S3TriggerAccess
+            Effect: Allow
+            Principal:
+              AWS: 
+                - '*'
+            Action:
+              - sns:Publish
+            Resource:
+              - !Ref SNSTopic
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:s3:::${BucketName}"
+
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: devops@sprintqa.com
+      Protocol: email
+      TopicArn: !Ref SNSTopic
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          -
+            Sid: OwnerAccountPersmissions
+            Action:
+              - s3:*
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::012345678910:root" # Owner account ID 
+            Resource:
+              - !Sub "arn:aws:s3:::${BucketName}"
+              - !Sub "arn:aws:s3:::${BucketName}/*"
+          -
+            Sid: CrossAccountAccess
+            Action:
+              - s3:GetBucketLocation
+              - s3:GetObject
+              - s3:ListBucket
+              - s3:ListBucketMultipartUploads
+            Effect: Allow
+            Principal:
+              AWS: ["arn:aws:iam::012345678910:root","arn:aws:iam::012345678910:root"] # clientA and clientB account IDs
+            Resource:
+              - !Sub "arn:aws:s3:::${BucketName}"
+              - !Sub "arn:aws:s3:::${BucketName}/*"
+
+Outputs:
+
+  S3Bucket:
+    Value: !Ref S3Bucket
+    Description: S3 Bucket for object storage
+
+  SNSTopicArn:
+    Value: !Ref SNSTopic
+    Description: SNS Topic for S3 Object Triggers
