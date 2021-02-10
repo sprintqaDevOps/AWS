@@ -131,3 +131,8 @@ Outputs:
   SNSTopicArn:
     Value: !Ref SNSTopic
     Description: SNS Topic for S3 Object Triggers
+
+# aws s3api get-object --bucket s3-cross-account-access-test-124e34343 --key aws.png  hello.png
+# aws s3api list-buckets --query "Buckets[].Name"
+# aws s3api list-objects-v2 --bucket s3-cross-account-access-test-124e34343
+# aws s3api put-object --bucket s3-cross-account-access-test-124e34343 --key hi.png --body hello.png
