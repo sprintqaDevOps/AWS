@@ -36,11 +36,11 @@ def lambda_handler(event, context):
 	#Step 4: Send email confirmation with SES
 	orderPlacementText='Hello, your order is placed successfully. We will ship your item as soon as possible, thank you for your business.'
 	ses.send_email( Source=FROM_EMAIL_ADDRESS,
-        Destination={ 'ToAddresses': [customerEmail] }, 
-        Message={ 'Subject': {'Data': 'Your order is placed.'},
-            'Body': {'Text': {'Data': orderPlacementText}}
-        }
-    )
+		Destination={ 'ToAddresses': [customerEmail] }, 
+		Message={ 'Subject': {'Data': 'Your order is placed.'},
+		    'Body': {'Text': {'Data': orderPlacementText}}
+		}
+	    )
 	
 	#Step 5: Return the response object
 	return responseObject
