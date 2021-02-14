@@ -6,11 +6,14 @@ touch requirements.txt
 
 # Creating the Python virtual environment with venv
 # 1. Create the Virtual Environment:
-python3 -m venv venv
+python -m venv venv
 
 # 2. Activate the virtual environment:
 # On Mac/Linux:
 source venv/bin/activate
+
+#Using GitBash:
+source venv/Scripts/activate
 
 # On Windows:
 venv\Scripts\activate.bat
