@@ -1,0 +1,139 @@
+---
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: S3 Bucket for CrossAccount access
+
+Parameters:
+  BucketName:
+    Type: String
+    Description: S3 bucket name
+  # number of days objects will expire in s3
+  ObjectExpiration:
+    Type: Number
+    Description: S3 object lifecycle 
+
+Metadata:
+  # for ui 
+  AWS::CloudFormation::Interface:
+    ParameterLabels:
+      BucketName:
+        default: S3 Bucket Name
+      ObjectExpiration:
+        default: S3 Object Expiration Date
+
+Resources:
+  S3Bucket:
+    Type: AWS::S3::Bucket
+    #DeletionPolicy : Retain
+    DependsOn: # dependent on another resource, s3 bucekt will not get created until dependent resource is created 
+      - SNSTopicPolicy
+    Properties:
+      # BucketName dependent on AWS::SNS::TopicPolicy
+      BucketName: !Ref BucketName
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      AccessControl: Private
+      LifecycleConfiguration:
+        Rules:
+          -
+            AbortIncompleteMultipartUpload:
+              DaysAfterInitiation: 2
+            ExpirationInDays: !Ref ObjectExpiration
+            Status: Enabled
+      NotificationConfiguration:
+        TopicConfigurations:
+          -
+            Event: s3:ObjectCreated:Put
+            Topic: !Ref SNSTopic
+          -
+            Event: s3:ObjectCreated:Post
+            Topic: !Ref SNSTopic
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: false
+        BlockPublicPolicy: false
+        IgnorePublicAcls: false
+        RestrictPublicBuckets: false
+      Tags:
+        -
+          Key: Description
+          Value: S3Bucket for StaticWebsite
+      WebsiteConfiguration:
+        ErrorDocument: error.html
+        IndexDocument: index.html
+
+  SNSTopic:
+    Type: AWS::SNS::Topic
+
+  SNSTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics:
+        - !Ref SNSTopic
+      PolicyDocument:
+        Id: SNSTopicPolicy
+        Version: '2012-10-17'
+        Statement:
+          -
+            Sid: S3TriggerAccess
+            Effect: Allow
+            Principal:
+              AWS: 
+                - '*'
+            Action:
+              - sns:Publish
+            Resource:
+              - !Ref SNSTopic
+            Condition:
+              ArnLike:
+                aws:SourceArn: !Sub "arn:aws:s3:::${BucketName}"
+
+  SNSSubscription:
+    Type: AWS::SNS::Subscription
+    Properties:
+      Endpoint: devops@sprintqa.com
+      Protocol: email
+      TopicArn: !Ref SNSTopic
+
+  S3BucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref S3Bucket
+      PolicyDocument:
+        Statement:
+          -
+            Sid: OwnerAccountPersmissions
+            Action:
+              - s3:*
+            Effect: Allow
+            Principal:
+              AWS:
+                - "arn:aws:iam::1231456464564654:root" # Owner account ID 
+            Resource:
+              - !Sub "arn:aws:s3:::${BucketName}"
+              - !Sub "arn:aws:s3:::${BucketName}/*"
+          -
+            Sid: PublicAccess
+            Action:
+              - s3:GetObject
+            Effect: Allow
+            Principal: '*' # clientA and clientB account IDs
+            Resource:
+              - !Sub "arn:aws:s3:::${BucketName}"
+              - !Sub "arn:aws:s3:::${BucketName}/*"
+
+Outputs:
+
+  S3Bucket:
+    Value: !Ref S3Bucket
+    Description: S3 Bucket for object storage
+
+  SNSTopicArn:
+    Value: !Ref SNSTopic
+    Description: SNS Topic for S3 Object Triggers
+
+# aws s3api get-object --bucket s3-crossaccountaccess-dfsfkdsjfdlskfjdslfkjdslfkjf --key gallery-img2.jpg  crossAccount.png
+# aws s3api list-buckets --query "Buckets[].Name"
+# aws s3api list-objects-v2 --bucket s3-cross-account-access-test-124e34343
+# aws s3api put-object --bucket s3-cross-account-access-test-124e34343 --key hi.png --body hello.png
