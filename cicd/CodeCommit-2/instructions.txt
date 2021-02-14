@@ -23,6 +23,11 @@ venv\Scripts\activate.bat
 pip install -r requirements.txt
 
 # Remember to add venv/ to the .gitignore
+touch .gitignore
+	venv/
+
+# Check if flask is running on the localhost
+flask run 
 
 # Add the files, commit, and push the changes
 git add .
