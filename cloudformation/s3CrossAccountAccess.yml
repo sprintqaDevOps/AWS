@@ -89,7 +89,7 @@ Resources:
   SNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: devops@sprintqa.com
+      Endpoint: youremail
       Protocol: email
       TopicArn: !Ref SNSTopic
 
@@ -106,7 +106,7 @@ Resources:
             Effect: Allow
             Principal:
               AWS:
-                - "arn:aws:iam::559274136064:root" # Owner account ID 
+                - "arn:aws:iam::126456432132:root" # Owner account ID 
             Resource:
               - !Sub "arn:aws:s3:::${BucketName}"
               - !Sub "arn:aws:s3:::${BucketName}/*"
@@ -119,7 +119,7 @@ Resources:
               - s3:ListBucketMultipartUploads
             Effect: Allow
             Principal:
-              AWS: ["arn:aws:iam::271133291947:root"] # clientA and clientB account IDs
+              AWS: ["arn:aws:iam::12345646875:root"] # clientA and clientB account IDs
             Resource:
               - !Sub "arn:aws:s3:::${BucketName}"
               - !Sub "arn:aws:s3:::${BucketName}/*"
