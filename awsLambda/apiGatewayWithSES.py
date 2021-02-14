@@ -2,9 +2,9 @@ import json, boto3
 
 ses = boto3.client('ses')
 
-FROM_EMAIL_ADDRESS = 'devops@sprintqa.com'
+FROM_EMAIL_ADDRESS = ''
 
-#customerEmail='azatpenji@gmail.com'
+#customerEmail=''
 
 def lambda_handler(event, context):
     #Step 1: Parse given query string parameters
