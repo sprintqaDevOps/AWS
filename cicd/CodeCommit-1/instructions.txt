@@ -1,0 +1,25 @@
+# Create the ssh config file on Mac 
+# (Follow the instructions provided by AWS for other systems)
+touch ~/.ssh/config
+
+# Update the file to look like this:
+# Note, that ~/.ssh/id_rsa might need to change 
+# depending on your operating system
+Host git-codecommit.*.amazonaws.com
+User <YOUR-USER-ID>
+IdentityFile ~/.ssh/id_rsa
+
+# Update the permissions on the file:
+chmod 600 ~/.ssh/config
+
+# Git clone the repository
+git clone <your-repository-url>
+
+cd flasky
+ls -al
+
+git checkout -b main
+touch app.py
+git add app.py
+git commit -m "add app.py"
+git push origin main
