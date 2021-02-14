@@ -29,6 +29,8 @@ touch .gitignore
 # Check if flask is running on the localhost
 flask run 
 
+# Add __pycache__/ to .gitignore
+
 # Add the files, commit, and push the changes
 git add .
 git commit -m "A commit message of your choice"
