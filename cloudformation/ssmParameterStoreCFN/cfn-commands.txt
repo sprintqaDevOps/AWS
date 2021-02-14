@@ -1,0 +1,21 @@
+# Make sure you are in the same folder as yml file
+
+aws cloudformation deploy \
+--template-file lambda-template.yml \
+--stack-name demo-lambda-stack \
+--capabilities CAPABILITY_IAM CAPABILITY_NAMED_IAM
+
+
+# Check if lambda is created or not:
+
+aws lambda list-functions
+
+# To invoke the function by replacing the name of the function to match yours
+
+aws lambda invoke \
+--function-name ParameterStoreLambdaFunction-yourLambdaName \
+result-file.txt
+
+# To delete the stack:
+aws cloudformation delete-stack \
+--stack-name demo-lambda-stack
