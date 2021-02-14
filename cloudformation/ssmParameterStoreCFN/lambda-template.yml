@@ -1,0 +1,51 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Lambda Function CloudFormation Template using SSM
+Resources:
+  LambdaRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ssm-lambda-role
+      AssumeRolePolicyDocument:
+        Statement:
+          - Action:
+            - sts:AssumeRole
+            Effect: Allow
+            Principal:
+              Service:
+              - lambda.amazonaws.com
+        Version: 2012-10-17
+      Policies:
+        - PolicyDocument:
+            Statement:
+              - Action:
+                  - ssm:getParameter
+                Effect: Allow
+                Resource: "*"
+          PolicyName: get-ssm-parameter
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/AWSLambdaExecute
+  ParameterStoreLambdaFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Runtime: python3.7
+      Handler: index.handler
+      Role:
+        Fn::GetAtt:
+          - LambdaRole
+          - Arn
+      Code:
+        ZipFile: |
+          import boto3
+          ssm = boto3.client('ssm')
+          def get_db_password():
+              db_password = ssm.get_parameter(
+                  Name='dbPassword',
+                  WithDecryption=True
+              )['Parameter']['Value']
+              return db_password
+          def handler(event, context):
+              return {
+                  "statusCode": 200,
+                  "body": get_db_password()
+              }
+

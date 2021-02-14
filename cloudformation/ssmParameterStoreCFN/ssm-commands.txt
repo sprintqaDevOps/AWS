@@ -1,0 +1,23 @@
+# First, we need to create the SSM Parameter in AWS that we want to use
+
+aws ssm put-parameter --name dbPassword --value devopsissocool --type SecureString
+
+# Either from the CLI or later from inside CloudFormation
+
+aws ssm get-parameter --name dbPassword 
+
+# To decrypt the data:
+
+aws ssm get-parameter --name dbPassword --with-decryption
+
+
+# To update the parameter:
+
+aws ssm put-parameter --name dbPassword --value devopsisalsoawesome --type SecureString --overwrite
+
+
+# To delete the parameter:
+
+aws ssm delete-parameter --name dbPassword
+
+
