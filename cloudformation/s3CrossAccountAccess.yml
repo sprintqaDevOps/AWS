@@ -89,7 +89,7 @@ Resources:
   SNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: devops@sprintqa.com
+      Endpoint: emailAddress
       Protocol: email
       TopicArn: !Ref SNSTopic
 
