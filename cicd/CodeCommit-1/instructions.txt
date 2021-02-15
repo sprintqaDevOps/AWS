@@ -15,9 +15,6 @@ chmod 600 ~/.ssh/config
 # Git clone the repository
 git clone <your-repository-url>
 
-cd flasky
-ls -al
-
 git checkout -b main
 touch app.py
 git add app.py
