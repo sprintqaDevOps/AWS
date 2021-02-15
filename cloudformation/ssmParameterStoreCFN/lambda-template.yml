@@ -14,7 +14,7 @@ Resources:
               Service:
               - lambda.amazonaws.com
         Version: 2012-10-17
-      Policies:
+      Policies: # inline policy
         - PolicyDocument:
             Statement:
               - Action:
@@ -22,7 +22,7 @@ Resources:
                 Effect: Allow
                 Resource: "*"
           PolicyName: get-ssm-parameter
-      ManagedPolicyArns:
+      ManagedPolicyArns: # aws managed policy
         - arn:aws:iam::aws:policy/AWSLambdaExecute
   ParameterStoreLambdaFunction:
     Type: AWS::Lambda::Function
