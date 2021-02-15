@@ -89,9 +89,10 @@ Resources:
   SNSSubscription:
     Type: AWS::SNS::Subscription
     Properties:
-      Endpoint: youremail
       Protocol: email
       TopicArn: !Ref SNSTopic
+      Endpoint: emailAddress
+
 
   S3BucketPolicy:
     Type: AWS::S3::BucketPolicy
