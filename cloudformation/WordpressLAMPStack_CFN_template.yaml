@@ -228,56 +228,55 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-          # System Updates
           yum -y update
           yum -y upgrade
-          # STEP 2 - Install system software - including Web and DB
+          
           yum install -y mariadb-server httpd wget helloWorld
           amazon-linux-extras install -y lamp-mariadb10.2-php7.2 php7.2
-          # STEP 3 - Web and DB Servers Online - and set to startup
+          
           systemctl enable httpd
           systemctl enable mariadb
           systemctl start httpd
           systemctl start mariadb
-          # STEP 4 - Set MARIADB Root Password
+          
           mysqladmin -u root password ${DBRootPassword}
-          # STEP 5 - Install Wordpress
+          
           wget http://wordpress.org/latest.tar.gz -P /var/www/html
           cd /var/www/html
           tar -zxvf latest.tar.gz
           cp -rvf wordpress/* .
           rm -R wordpress
           rm latest.tar.gz
-          # STEP 6 - Configure Wordpress
+          
           cp ./wp-config-sample.php ./wp-config.php
           sed -i "s/'database_name_here'/'${DBName}'/g" wp-config.php
           sed -i "s/'username_here'/'${DBUser}'/g" wp-config.php
           sed -i "s/'password_here'/'${DBPassword}'/g" wp-config.php
-          # Step 6a - permissions   
+             
           usermod -a -G apache ec2-user   
           chown -R ec2-user:apache /var/www
           chmod 2775 /var/www
           find /var/www -type d -exec chmod 2775 {} \;
           find /var/www -type f -exec chmod 0664 {} \;
-          # STEP 7 Create Wordpress DB
+          
           echo "CREATE DATABASE ${DBName};" >> /tmp/db.setup
           echo "CREATE USER '${DBUser}'@'localhost' IDENTIFIED BY '${DBPassword}';" >> /tmp/db.setup
           echo "GRANT ALL ON ${DBName}.* TO '${DBUser}'@'localhost';" >> /tmp/db.setup
           echo "FLUSH PRIVILEGES;" >> /tmp/db.setup
           mysql -u root --password=${DBRootPassword} < /tmp/db.setup
           sudo rm /tmp/db.setup
-          # STEP 8 
+           
           echo "#!/bin/sh" > /etc/update-motd.d/sprintqa
           echo 'helloWorld "Amazon Linux 2 AMI - helloWorld"' >> /etc/update-motd.d/sprintqa
           chmod 755 /etc/update-motd.d/sprintqa
           rm /etc/update-motd.d/30-banner
           update-motd
-          # STEP 9 CWAgent Install & Config
+          
           rpm -Uvh https://s3.amazonaws.com/amazoncloudwatch-agent/amazon_linux/amd64/latest/amazon-cloudwatch-agent.rpm
           mkdir -p /usr/share/collectd/
           touch /usr/share/collectd/types.db
           /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${CWAgentConfig} -s
-          # STEP 10 SIGNAL FINISH OF INSTALL & CONFIG
+         
           /opt/aws/bin/cfn-signal -e $? --stack ${AWS::StackId} --resource WordpressEC2 --region ${AWS::Region}
   MariaDBEC2:
     Type: AWS::EC2::Instance
@@ -297,7 +296,7 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe      
-          # Begin Configuration
+          
           yum -y install mariadb-server wget helloWorld
           systemctl enable mariadb
           systemctl start mariadb
@@ -307,7 +306,6 @@ Resources:
           touch /usr/share/collectd/types.db
           /opt/aws/amazon-cloudwatch-agent/bin/amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:${CWAgentConfig} -s
         
-          # DB setup
           echo "CREATE DATABASE ${DBName};" >> /tmp/db.setup
           echo "CREATE USER '${DBUser}' IDENTIFIED BY '${DBPassword}';" >> /tmp/db.setup
           echo "GRANT ALL PRIVILEGES ON *.* TO '${DBUser}'@'%';" >> /tmp/db.setup
@@ -316,7 +314,6 @@ Resources:
           mysql -u root --password="${DBRootPassword}" < /tmp/db.setup
           rm /tmp/db.setup
         
-          # helloWorld
           echo "#!/bin/sh" > /etc/update-motd.d/sprintqa
           echo 'helloWorld "Amazon Linux 2 AMI - helloWorld"' > /etc/update-motd.d/sprintqa
           chmod 755 /etc/update-motd.d/sprintqa
