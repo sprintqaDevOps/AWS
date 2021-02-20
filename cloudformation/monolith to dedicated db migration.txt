@@ -1,0 +1,23 @@
+Create LAMP stack using the given CFN template. Check on resources to confirm needed infrastructure. 
+
+Install Wordpress and create a sample post with an image. 
+
+Use the given commands to transfer data from existing LAMB stack server to a dedicated Maria DB server. 
+
+# use this command to get a snapshot of the existing maria db data
+mysqldump -u root -p sprintqa > wordpressServer.sql
+
+# use this command to remotely connect to private ip of dedicated maria db and send snapshot we persisted in the original wordpress db
+mysql -h 10.16.56.248 -u sprintqa -p sprintqa < wordpressServer.sql
+
+
+Now, edit wordpress config to make it point to the new db. 
+cd /var/www/html
+vim wp-config.php	>	replace localhost for DB_HOST to private IP of dedicate MariaDB server
+:wq!
+
+Now, confirm Wordpress website is working by refreshing. 
+
+Shut down Wordpress server MariaDB service to make sure that your website is still functioning since it is now connected to the dedicated MariaDB server. 
+systemctl status mariadb
+systemctl stop mariadb 
