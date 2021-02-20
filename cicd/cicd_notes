@@ -1,0 +1,53 @@
+  codecommit ssh connection setup
+  codecommit sns notification and lambda trigger
+  codebuild intro
+  codebuild with custom settings and try for a nonexisting test case to see it fail
+  codebuild buildspec documentation and discussion of docker sample
+  codebuild environment variable
+  codebuild ssm parameter store secret access(with IAM modified policy)
+  codebuild demo with artifacts(create s3 private bucket with ecryption)
+  add this bucket to codebuild artifacts stage
+  chose Allow AWS CodeBuild to modify IAM role option at the end
+  codebuild walk through cloudwatch logs and metrics and mention alarm for different metrics
+  codebuild create cloudwatch event rule
+  discuss codecommit pull request codebuild and lambda integration article architecture
+  codedeploy:
+1. create ec2 with IAM role that has s3 permissions since codedeploy will ask
+ec2 to fetch the s3 artifact that was build by codebuild
+2. install codedeploy agent on ec2
+https://docs.aws.amazon.com/codedeploy/latest/userguide/codedeploy-agent-operations-install-linux.html
+3. add tags to ec2 for codeDeploy usage
+4. create new codedeploy app
+5. create deployment group next
+6. create iam role for codedeploy and attach codedeploy policy
+7. create deployment for the deployment group
+8. create s3 bucket and upload your webapp files as zip file
+9. start the deployment
+10. open port 80 on ec2
+11. check
+12. https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-example.html
+13. https://docs.aws.amazon.com/codedeploy/latest/userguide/reference-appspec-file-structure-hooks.html#appspec-hooks-server
+14. set up sns topic and subscribe your email
+15. create event rule which will notify you when codeDeploy state change happens
+16. rollback option discussion
+17. onprem codedeploy: https://docs.aws.amazon.com/codedeploy/latest/userguide/on-premises-instances-register.html
+18. https://docs.aws.amazon.com/codedeploy/latest/userguide/register-on-premises-instance-iam-user-arn.html
+19. create ec2 with no iam role
+20. create iam user with full s3 permissions and codedeploy full permissions
+21. create onprem config file with iam user credentials
+22. install codedeploy agent on onprem instance
+23. register onprem instance with codedeploy
+25. create new deployment for app
+26. deploy your app based on Environment:Dev
+27. codedeploy lambda: create app for lambda compute platform
+28. create dep group
+29. iam role: codedeploy for lambda
+30. canary(shift traffic in 2 increments) vs linear
+31. create 2 lambda versions, create alias for version 1
+32. use appspec file for lambda
+33. test lambda deployment with appspec yaml editor
+34. codepipeline
+35. create simple codepipeline without codebuild
+36. add codebuild test option and test for grep "text here"
+37. add manual step
+38. add parallel stage to codedeploy and add s3 bucket
