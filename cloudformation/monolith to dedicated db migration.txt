@@ -8,7 +8,7 @@ Use the given commands to transfer data from existing LAMB stack server to a ded
 mysqldump -u root -p sprintqa > wordpressServer.sql
 
 # use this command to remotely connect to private ip of dedicated maria db and send snapshot we persisted in the original wordpress db
-mysql -h 10.16.56.248 -u sprintqa -p sprintqa < wordpressServer.sql
+mysql -h PrivateIP -u sprintqa -p sprintqa < wordpressServer.sql
 
 
 Now, edit wordpress config to make it point to the new db. 
@@ -21,3 +21,25 @@ Now, confirm Wordpress website is working by refreshing.
 Shut down Wordpress server MariaDB service to make sure that your website is still functioning since it is now connected to the dedicated MariaDB server. 
 systemctl status mariadb
 systemctl stop mariadb 
+
+Part 2: migrate from dedicated MariaDB to AWS RDS
+
+1. Create subnet group in the vpc created by cfn and select us-east-1a/b/c AZs.
+ 	Then select DB subnets for all 3 AZs
+ 	Create 
+2. Create rds with free tier and mysql 5.7.31, for rds vpc connectivity select created vpc and subnet group. Select private option for access,
+3. Make sure your rds sg has inbound rule from mariaDB instance sg. 
+4. Run commands from part 1 to export .sql file to rds and confirm. 
+
+
+Part 3: 
+Create RDS with public access.
+Install mysql shell/workbench.
+Connect using cmd/terminal.
+mysqlsh --user=admin --port=3306 --host dbName.us-east-1.rds.amazonaws.com  
+	\sql
+	use sprintqa (dbname)
+	create table items (item_id int(11) unsigned NOT NULL AUTO_INCREMENT, name varchar(100) DEFAULT NULL, PRIMARY KEY (item_id)) ;
+	select * from items;
+	insert into items values('4545','Laptop');
+	select * from items;
