@@ -313,7 +313,7 @@ Resources:
       PreferredBackupWindow: !Ref PreferredBackupWindow
       PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow
       SnapshotIdentifier: !If [HasDBSnapshotIdentifier, !Ref DBSnapshotIdentifier, !Ref 'AWS::NoValue']
-      DeletionProtection: true
+      DeletionProtection: false
       KmsKeyId: !Ref KMSKeyID
       StorageEncrypted: true
       VpcSecurityGroupIds: [!Ref ClusterSecurityGroup]        
@@ -333,8 +333,6 @@ Resources:
       AutoMinorVersionUpgrade: !If [IsProd, 'false', 'true']
       DBSubnetGroupName: !Ref DBSubnetGroup
       PubliclyAccessible: false
-      EnablePerformanceInsights: true
-      PerformanceInsightsRetentionPeriod: 7
       Tags:
         - Key: Environment
           Value: !Ref EnvironmentName
@@ -358,8 +356,6 @@ Resources:
       AutoMinorVersionUpgrade: !If [IsProd, 'false', 'true']
       DBSubnetGroupName: !Ref DBSubnetGroup
       PubliclyAccessible: false
-      EnablePerformanceInsights: true
-      PerformanceInsightsRetentionPeriod: 7
       Tags:
         - Key: Environment
           Value: !Ref EnvironmentName
