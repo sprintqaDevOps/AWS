@@ -1,0 +1,540 @@
+AWSTemplateFormatVersion: '2010-09-09'
+
+Description: 'CloudFormation Template to create Aurora MySQL Cluster DB Instance'
+
+# Metadata
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      - Label:
+          default: 'Environment'
+        Parameters:
+          - EnvironmentName
+      - Label:
+          default: 'DB Parameters'
+        Parameters:
+          - DBName
+          - DBPort
+          - DBUsername
+          - DBPassword
+          - DBInstanceClass
+          - Engine
+          - DBSnapshotIdentifier
+          - DBBackupRetentionPeriod
+          - PreferredBackupWindow
+          - PreferredMaintenanceWindow
+          - KMSKeyID
+          - NotificationList
+
+      - Label:
+          default: Networking
+        Parameters:
+          - ParentVPCStack
+          - DBSubnetIDs
+      - Label:
+          default: Mandatory Tags
+        Parameters:
+          - Application
+          - Team          
+
+# Parameters   
+Parameters:
+  
+  DBName:
+    Description: Database Name
+    Type: String
+    MinLength: '1'
+    MaxLength: '64'
+    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$" 
+    ConstraintDescription: Must start with a letter. Only numbers, letters, and _ accepted. max length 64 characters 
+
+  DBPort:
+    Description: TCP/IP Port for the Database Instance
+    Type: Number
+    Default: 3306
+    ConstraintDescription: 'Must be in the range [1115-65535]'
+    MinValue: 1115
+    MaxValue: 65535
+    
+  DBUsername:
+    Description: Database master username
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$"
+    ConstraintDescription: Must start with a letter. Only numbers, letters, and _ accepted. max length 16 characters
+
+  DBPassword:
+    Description: Database master password
+    Type: String
+    MinLength: '1'
+    MaxLength: '16'
+    AllowedPattern: "^[a-zA-Z]+[0-9a-zA-Z_]*$"
+    ConstraintDescription: Must start with a letter. Only numbers, letters, and _ accepted. max length 16 characters
+     
+  Engine:
+    Description: Select Database Engine Version
+    Type: String
+    Default: aurora
+    AllowedValues:
+      - '5.6.mysql-aurora.1.19.1' 
+      - aurora
+      - '5.7.mysql-aurora.2.04.3' 
+      - '5.7.mysql-aurora.2.03.4'
+      - 'aurora-mysql'
+     
+  DBInstanceClass:
+    Default: db.r4.large
+    Description: Database Instance Class. 
+    Type: String
+    AllowedValues:
+    - db.t3.medium
+    - db.r4.large
+    - db.r4.xlarge
+    - db.r4.2xlarge
+    - db.r4.4xlarge
+    - db.r4.8xlarge
+    - db.r4.16xlarge
+    - db.r5.large
+    - db.r5.xlarge
+    - db.r5.2xlarge
+    - db.r5.4xlarge
+    - db.r5.12xlarge
+    - db.r5.24xlarge
+
+  DBSnapshotIdentifier:
+    Description: 'Optional identifier for the DB cluster snapshot from which you want to restore (leave blank to create an empty cluster).'
+    Type: String
+    Default: ''
+  
+  DBBackupRetentionPeriod:
+    Description: 'The number of days to keep snapshots of the cluster.'
+    Type: Number
+    MinValue: 1
+    MaxValue: 35
+    Default: 14
+
+  PreferredBackupWindow:
+    Description: 'The daily time range in UTC during which you want to create automated backups.'
+    Type: String
+    Default: '09:03-09:33'
+
+  PreferredMaintenanceWindow:
+    Description: The weekly time range (in UTC) during which system maintenance can occur.
+    Type: String
+    Default: 'sat:04:00-sat:07:30'
+
+  ParentVPCStack: 
+    Type: 'AWS::EC2::VPC::Id'
+    Description : Choose the VPC
+  
+  DBSubnetIDs:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: Array of subnet IDs for the DBSubnetGroup 
+  
+  KMSKeyID:
+    Type: String
+    Description: KMSKeyID from the current account
+
+
+
+# Mandatory tags
+  EnvironmentName:
+    Type: String
+    Description: Environment Name of the associated AWS resource.
+    AllowedValues:
+      - stage
+      - prod
+
+  Application:
+    Type: String
+    Description: The Application name. 
+    AllowedPattern: "^[a-zA-Z]+[a-zA-Z ]+[a-zA-Z]+$"
+    ConstraintDescription: provide a valid application name containing only letters and spaces
+    Default: SprintQADevOps
+
+  Team:
+    Type: String
+    Description: The Team name. 
+    AllowedPattern: "^[a-zA-Z]+[a-zA-Z ]+[a-zA-Z]+$"
+    ConstraintDescription: provide a valid application name containing only letters and spaces
+    Default: DevOps
+    
+  NotificationList:
+    Type: String
+    Description: The Email notification list is used to configure a SNS topic for sending cloudwatch alarm and RDS Event notifications
+    AllowedPattern: '^(([^<>()\[\]\\.,;:\s@"]+(\.[^<>()\[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$'
+    ConstraintDescription: provide a valid email address.
+    Default: devops@sprintqa.com 
+    
+
+# Mappings
+Mappings:
+  EngineMap:
+    aurora:
+      Engine: aurora
+      EngineVersion: '5.6.10a'
+      Port: 3306
+      ClusterParameterGroupFamily: 'aurora5.6'
+      ParameterGroupFamily: 'aurora5.6'
+    '5.6.mysql-aurora.1.19.1':
+      Engine: aurora
+      EngineVersion: '5.6.mysql_aurora.1.19.1'
+      Port: 3306
+      ClusterParameterGroupFamily: 'aurora5.6'
+      ParameterGroupFamily: 'aurora5.6'
+    'aurora-mysql':
+      Engine: 'aurora-mysql'
+      EngineVersion: '5.7.12'
+      Port: 3306
+      ClusterParameterGroupFamily: 'aurora-mysql5.7'
+      ParameterGroupFamily: 'aurora-mysql5.7'
+    '5.7.mysql-aurora.2.03.4':
+      Engine: 'aurora-mysql'
+      EngineVersion: '5.7.mysql_aurora.2.03.4'
+      Port: 3306
+      ClusterParameterGroupFamily: 'aurora-mysql5.7'
+      ParameterGroupFamily: 'aurora-mysql5.7'
+    '5.7.mysql-aurora.2.04.3':
+      Engine: 'aurora-mysql'
+      EngineVersion: '5.7.mysql_aurora.2.04.3'
+      Port: 3306
+      ClusterParameterGroupFamily: 'aurora-mysql5.7'
+      ParameterGroupFamily: 'aurora-mysql5.7'
+   
+
+# Conditions 
+Conditions:
+  #IsUseDBSnapshot: !Not [!Equals [!Ref DBSnapshotName, ""]]
+  IsProd: !Equals [!Ref EnvironmentName, 'prod']
+  HasDBSnapshotIdentifier: !Not [!Equals [!Ref DBSnapshotIdentifier, '']]
+  HasEngineMySQL: !Or [!Equals [!FindInMap [EngineMap, !Ref Engine, Engine], 'aurora'], !Equals [!FindInMap [EngineMap, !Ref Engine, Engine], 'aurora-mysql']]
+
+
+# Resources   
+Resources:
+
+  MonitoringIAMRole: 
+    Type: AWS::IAM::Role
+    Condition: IsProd
+    Properties: 
+      AssumeRolePolicyDocument: 
+        Version: "2012-10-17"
+        Statement: 
+          - 
+            Effect: "Allow"
+            Principal: 
+              Service: 
+                - "monitoring.rds.amazonaws.com"
+            Action: 
+              - "sts:AssumeRole"
+      Path: "/"
+      ManagedPolicyArns: 
+        - arn:aws:iam::aws:policy/service-role/AmazonRDSEnhancedMonitoringRole
+  
+  ClusterSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Aurora cluster security group
+      VpcId: !Ref ParentVPCStack
+      SecurityGroupIngress:
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: 10.0.0.0/8
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: 172.16.0.0/12
+      - IpProtocol: tcp
+        FromPort: 3306
+        ToPort: 3306
+        CidrIp: 192.168.0.0/16
+      Tags:
+      - Key: Name
+        Value: !Sub '${AWS::StackName}-AuroraClusterSecurityGroup'
+      - Key: Team
+        Value: !Ref Team
+      - Key: Application
+        Value: !Ref Application
+
+  DBSNSTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      Subscription:
+      - Endpoint: devops@sprintqa.com
+        Protocol: email
+        
+  DBSubnetGroup:
+    Type: 'AWS::RDS::DBSubnetGroup'
+    Properties:
+      DBSubnetGroupDescription: DB Subnet group
+      SubnetIds: !Ref DBSubnetIDs #if this doesn't work use, !Join [",", [!Select [0, !Ref Subnets], !Select [1, !Ref Subnets]]]
+
+  DBClusterParameterGroup:
+    Type: 'AWS::RDS::DBClusterParameterGroup'
+    Properties:
+      Description: !Ref 'AWS::StackName'
+      Family: !FindInMap [EngineMap, !Ref Engine, ClusterParameterGroupFamily] 
+      Parameters: !If
+      - HasEngineMySQL
+      - character_set_client: utf8
+        character_set_connection: utf8
+        character_set_database: utf8
+        character_set_filesystem: utf8
+        character_set_results: utf8
+        character_set_server: utf8
+        collation_connection: utf8_general_ci
+        collation_server: utf8_general_ci
+        binlog_format: ROW
+      - client_encoding: 'UTF8'
+        
+  DBParamGroup:
+    Type: 'AWS::RDS::DBParameterGroup'
+    Properties:
+      Description: !Ref 'AWS::StackName'
+      Family: !FindInMap [EngineMap, !Ref Engine, ParameterGroupFamily] 
+      
+  AuroraDBCluster:
+    Type: 'AWS::RDS::DBCluster'
+    DeletionPolicy: Snapshot # default
+    UpdateReplacePolicy: Snapshot
+    Properties:
+      BackupRetentionPeriod: !Ref DBBackupRetentionPeriod
+      DatabaseName: !If [HasDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref DBName]
+      DBClusterParameterGroupName: !Ref DBClusterParameterGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      Engine: !FindInMap [EngineMap, !Ref Engine, Engine]
+      EngineMode: provisioned
+      EngineVersion: !FindInMap [EngineMap, !Ref Engine, EngineVersion]
+      MasterUsername: !If [HasDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref DBUsername]
+      MasterUserPassword: !If [HasDBSnapshotIdentifier, !Ref 'AWS::NoValue', !Ref DBPassword]
+      Port: !FindInMap [EngineMap, !Ref Engine, Port]
+      PreferredBackupWindow: !Ref PreferredBackupWindow
+      PreferredMaintenanceWindow: !Ref PreferredMaintenanceWindow
+      SnapshotIdentifier: !If [HasDBSnapshotIdentifier, !Ref DBSnapshotIdentifier, !Ref 'AWS::NoValue']
+      DeletionProtection: false
+      KmsKeyId: !Ref KMSKeyID
+      StorageEncrypted: true
+      VpcSecurityGroupIds: [!Ref ClusterSecurityGroup]        
+
+  AuroraDBFirstInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      CopyTagsToSnapshot: true
+      DBInstanceClass: !Ref DBInstanceClass
+      DBClusterIdentifier: !Ref AuroraDBCluster  
+      Engine: !FindInMap [EngineMap, !Ref Engine, Engine]
+      EngineVersion: !FindInMap [EngineMap, !Ref Engine, EngineVersion]
+      DBParameterGroupName: !Ref DBParamGroup
+      MonitoringInterval: !If [IsProd, 1, 0]
+      MonitoringRoleArn: !If [IsProd, !GetAtt MonitoringIAMRole.Arn, !Ref "AWS::NoValue"]
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: !If [IsProd, 'false', 'true']
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: !Ref Application
+        - Key: Team
+          Value: !Ref Team
+
+  AuroraDBSecondInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      CopyTagsToSnapshot: true  
+      DBInstanceClass: !Ref DBInstanceClass
+      DBClusterIdentifier: !Ref AuroraDBCluster  
+      Engine: !FindInMap [EngineMap, !Ref Engine, Engine]
+      EngineVersion: !FindInMap [EngineMap, !Ref Engine, EngineVersion]
+      DBParameterGroupName: !Ref DBParamGroup
+      MonitoringInterval: !If [IsProd, 1, 0]
+      MonitoringRoleArn: !If [IsProd, !GetAtt MonitoringIAMRole.Arn, !Ref "AWS::NoValue"]
+      AllowMajorVersionUpgrade: false
+      AutoMinorVersionUpgrade: !If [IsProd, 'false', 'true']
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: false
+      Tags:
+        - Key: Environment
+          Value: !Ref EnvironmentName
+        - Key: Application
+          Value: !Ref Application
+        - Key: Team
+          Value: !Ref Team
+  
+  AuroraClusterDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: sprintqa.devops.corporate.
+      Name: devopsapp.cluster.sprintqa.devops.corporate.
+      Type: CNAME
+      TTL: '60'
+      ResourceRecords:
+      - !GetAtt AuroraDBCluster.Endpoint.Address
+  
+  AuroraReaderDNSRecord:
+    Type: AWS::Route53::RecordSet
+    Properties:
+      HostedZoneName: sprintqa.devops.corporate.
+      Name: devopsapp.reader.sprintqa.devops.corporate.
+      Type: CNAME
+      TTL: '60'
+      ResourceRecords:
+      - !GetAtt AuroraDBCluster.ReadEndpoint.Address
+
+  DatabaseClusterEventSubscription:
+    Type: 'AWS::RDS::EventSubscription'
+    Properties:
+      EventCategories:
+      - failover
+      - failure
+      - notification
+      SnsTopicArn: !Ref DBSNSTopic
+      SourceIds: [!Ref AuroraDBCluster]
+      SourceType: 'db-cluster'
+
+  DatabaseInstanceEventSubscription:
+    Type: 'AWS::RDS::EventSubscription'
+    Properties:
+      EventCategories:
+      - availability
+      - configuration change
+      - deletion
+      - failover
+      - failure
+      - maintenance
+      - notification
+      - recovery
+      SnsTopicArn: !Ref DBSNSTopic
+      SourceIds: 
+      - !Ref AuroraDBFirstInstance
+      - !Ref AuroraDBSecondInstance
+      SourceType: 'db-instance'
+      
+  DBParameterGroupEventSubscription:
+    Type: 'AWS::RDS::EventSubscription'
+    Properties:
+      EventCategories:
+      - configuration change
+      SnsTopicArn: !Ref DBSNSTopic
+      SourceIds: [!Ref DBParamGroup]
+      SourceType: 'db-parameter-group'
+  
+  DMLLatencyAlarm1:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+      - Ref: DBSNSTopic
+      AlarmDescription: 'DML Latency'
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Ref: AuroraDBFirstInstance
+      MetricName: DMLLatency
+      Statistic: Maximum
+      Namespace: 'AWS/RDS'
+      Threshold: '250'
+      Unit: Milliseconds
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold'
+      Period: '60'
+      EvaluationPeriods: '5'
+      TreatMissingData: 'missing'
+
+  DMLLatencyAlarm2:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+      - Ref: DBSNSTopic
+      AlarmDescription: 'DML Latency'
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Ref: AuroraDBSecondInstance
+      MetricName: DMLLatency
+      Statistic: Maximum
+      Namespace: 'AWS/RDS'
+      Threshold: '250'
+      Unit: Milliseconds
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold'
+      Period: '60'
+      EvaluationPeriods: '5'
+      TreatMissingData: 'missing'
+  
+  SelectLatencyAlarm1:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+      - Ref: DBSNSTopic
+      AlarmDescription: 'Select Latency'
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Ref: AuroraDBFirstInstance
+      MetricName: SelectLatency
+      Statistic: Maximum
+      Namespace: 'AWS/RDS'
+      Threshold: '250'
+      Unit: Milliseconds
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold'
+      Period: '60'
+      EvaluationPeriods: '5'
+      TreatMissingData: 'missing'
+  
+  SelectLatencyAlarm2:
+    Type: "AWS::CloudWatch::Alarm"
+    Properties:
+      ActionsEnabled: true
+      AlarmActions:
+      - Ref: DBSNSTopic
+      AlarmDescription: 'Select Latency'
+      Dimensions:
+      - Name: DBInstanceIdentifier
+        Value:
+          Ref: AuroraDBFirstInstance
+      MetricName: SelectLatency
+      Statistic: Maximum
+      Namespace: 'AWS/RDS'
+      Threshold: '250'
+      Unit: Milliseconds
+      ComparisonOperator: 'GreaterThanOrEqualToThreshold'
+      Period: '60'
+      EvaluationPeriods: '5'
+      TreatMissingData: 'missing'
+
+   
+
+# Outputs  
+Outputs:
+  ClusterEndpoint:
+    Description: 'Aurora Cluster/Writer Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Address'
+    Export: 
+      Name: DevOpsAppClusterEndpoint
+      
+  ReaderEndpoint:
+    Description: 'Aurora Reader Endpoint'
+    Value: !GetAtt 'AuroraDBCluster.ReadEndpoint.Address'
+    Export: 
+      Name: DevOpsAppReaderEndpoint
+  Port:
+    Description: 'Aurora Endpoint Port'
+    Value: !GetAtt 'AuroraDBCluster.Endpoint.Port'
+  DBUsername:
+    Description: 'Database master username'
+    Value: !Ref DBUsername
+  DBName:
+    Description: 'Database Name'
+    Value: !Ref DBName
+
+  AuroraClusterURL:
+    Description: 'The public URL for the AuroraCluster'
+    Value: !Sub '${AuroraClusterDNSRecord}'
+  
+  AuroraReaderURL:
+    Description: 'The public URL for the AuroraReader'
+    Value: !Sub '${AuroraReaderDNSRecord}'
