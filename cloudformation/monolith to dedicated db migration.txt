@@ -48,10 +48,10 @@ create rds folder and run: npm init , give it a name
 npm install mysql
 in the rds folder, vim config.json
 {
-"dbhost" : "sprintqa.cuxcykvkr47m.us-east-1.rds.amazonaws.com",
+"dbhost" : "dfsfsfsfs.us-east-1.rds.amazonaws.com",
 "dbuser" : "admin",
-"dbpassword" : "sprintqa123456",
-"dbname" : "sprintqa"
+"dbpassword" : "dsfsf",
+"dbname" : "sdfsfs"
 }
  in the same rds folder, vim local.js
 
